@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dança do Coco - Desafio Rítmico</title>
+  <style>
+    body {
+      background: url("images.jfif") no-repeat center center fixed; /* troque pela sua imagem de fundo */
+      background-size: cover;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #2e7d32;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      overflow: hidden;
+    }
+    #startScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(248, 255, 240, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(4px);
+      border-radius: 0;
+    }
+    #startScreen h2 {
+      font-size: 2.2em;
+      margin-bottom: 20px;
+      color: #2e7d32;
+      text-shadow: 1px 1px 3px #a5d6a7;
+    }
+    #startButton {
+      font-size: 1.3em;
+      padding: 12px 25px;
+      background-color: #7cb342; /* verde folhagem */
+      border: 2px solid #4e7d1f;
+      color: white;
+      font-weight: bold;
+      border-radius: 15px;
+      cursor: pointer;
+      box-shadow: 2px 2px 6px #3b5323;
+      transition: background-color 0.3s ease;
+    }
+    #startButton:hover {
+      background-color: #558b2f;
+    }
+    header {
+      background: url("coco-seco-1.pngS") no-repeat center; /* troque pelo seu banner do coco */
+      background-size: contain;
+      height: 150px;
+      box-shadow: inset 0 -5px 15px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-bottom: 15px;
+    }
+    header h1 {
+      color: #fff;
+      text-shadow: 2px 2px 5px #000;
+      font-weight: bold;
+      font-size: 2.8em;
+      margin: 0;
+      position: absolute;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none; /* não atrapalha o clique */
+    }
+    #instructions {
+      font-size: 1.3em;
+      color: #33691e;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px #c8e6c9;
+      font-weight: 600;
+    }
+    #gameCanvas {
+      border: 6px solid #a57c3c; /* tom madeira/palha */
+      border-radius: 15px;
+      background-color: rgba(255, 255, 240, 0.85);
+      box-shadow: 0 0 15px #6d4c41;
+      margin: 30px auto;
+      display: block;
+    }
+    .score {
+      font-size: 1.5em;
+      color: #33691e;
+      margin-top: 10px;
+      font-weight: 700;
+      text-shadow: 1px 1px 2px #a5d6a7;
+    }
+    #questionBox {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffffcc; /* leve transparência */
+      border: 3px solid #aed581;
+      padding: 20px;
+      border-radius: 15px;
+      z-index: 1000;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(6px);
+      max-width: 90vw;
+      width: 350px;
+    }
+    #questionBox p {
+      margin-bottom: 15px;
+      font-size: 1.3em;
+      color: #2e7d32;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px #a5d6a7;
+    }
+    #questionBox button {
+      margin: 6px;
+      padding: 8px 15px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 15px;
+      background-color: #7cb342;
+      border: 2px solid #4e7d1f;
+      color: white;
+      font-weight: bold;
+      box-shadow: 2px 2px 5px #3b5323;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      min-width: 110px;
+    }
+    #questionBox button:hover {
+      background-color: #558b2f;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 999;
+      backdrop-filter: blur(2px);
+    }
+    #wrongAnswerEffect {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(216, 67, 21, 0.3); /* vermelho queimado */
+      display: none;
+      z-index: 1500;
+      animation: flash 0.5s;
+    }
+    @keyframes flash {
+      0% { opacity: 0.8; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen">
+    <h2>🎶 Bem-vindo ao Desafio Rítmico do Coco de Roda 💃</h2>
+    <button id="startButton">Começar Jogo</button>
+  </div>
+
+  <header>
+    <h1> Desafio Rítmico do Coco de Roda </h1>
+  </header>
+
+  <div id="instructions">Aperte A, S, D ou F no ritmo certo!</div>
+
+  <canvas id="gameCanvas" width="500" height="400"></canvas>
+  <div class="score">Pontuação: <span id="score">0</span></div>
+
+  <div id="overlay"></div>
+  <div id="questionBox">
+    <p id="questionText"></p>
+    <div id="questionOptions"></div>
+  </div>
+
+  <div id="wrongAnswerEffect"></div>
+
+  <audio id="hitSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+  <audio id="missSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  <audio id="wrongSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+  <script>
+    const startScreen = document.getElementById("startScreen");
+    const startButton = document.getElementById("startButton");
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreDisplay = document.getElementById("score");
+    const questionBox = document.getElementById("questionBox");
+    const questionText = document.getElementById("questionText");
+    const questionOptions = document.getElementById("questionOptions");
+    const overlay = document.getElementById("overlay");
+    const wrongEffect = document.getElementById("wrongAnswerEffect");
+    const hitSound = document.getElementById("hitSound");
+    const missSound = document.getElementById("missSound");
+    const wrongSound = document.getElementById("wrongSound");
+
+    let score = 0;
+    let fallingNotes = [];
+    let gamePaused = true;
+    const keys = ["A", "S", "D", "F"];
+    const positions = [100, 200, 300, 400];
+
+    const questions = [
+      { q: "Qual instrumento é típico do Coco de Roda?", options: ["Violino", "Ganzá", "Gaita", "Teclado"], answer: "Ganzá" },
+      { q: "Onde se originou o Coco de Roda?", options: ["Amazonas", "São Paulo", "Alagoas", "Minas Gerais"], answer: "Alagoas" },
+      { q: "O Coco é uma mistura de dança e...?", options: ["Jogo", "Teatro", "Canto", "Esporte"], answer: "Canto" },
+      { q: "O Coco é tradicional de qual região do Brasil?", options: ["Sul", "Centro-Oeste", "Nordeste", "Sudeste"], answer: "Nordeste" },
+      { q: "Qual o papel do sapateado no Coco de Roda?", options: ["Estético", "Percussivo", "Decorativo", "Narrativo"], answer: "Percussivo" }
+    ];
+
+    function drawTargetKeys() {
+      keys.forEach((key, i) => {
+        ctx.fillStyle = "#aed581";
+        ctx.fillRect(positions[i] - 25, 360, 50, 20);
+        ctx.fillStyle = "#33691E";
+        ctx.font = "16px Comic Sans MS";
+        ctx.fillText(key, positions[i] - 5, 375);
+      });
+    }
+
+    function dropNote() {
+      const i = Math.floor(Math.random() * keys.length);
+      fallingNotes.push({ key: keys[i], x: positions[i], y: 0 });
+    }
+
+    function updateNotes() {
+      if (gamePaused) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawTargetKeys();
+      fallingNotes.forEach((note, index) => {
+        ctx.font = "30px serif"; // tamanho maior para emoji
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("🥥", note.x, note.y);
+        note.y += 2;
+        if (note.y > canvas.height) {
+          missSound.play();
+          showQuestion();
+          fallingNotes.splice(index, 1);
+        }
+      });
+    }
+
+    function checkHit(keyPressed) {
+      for (let i = 0; i < fallingNotes.length; i++) {
+        const note = fallingNotes[i];
+        if (note.key === keyPressed.toUpperCase() && note.y > 330 && note.y < 390) {
+          hitSound.play();
+          score++;
+          scoreDisplay.textContent = score;
+          fallingNotes.splice(i, 1);
+          return;
+        }
+      }
+      missSound.play();
+      showQuestion();
+    }
+
+    function showQuestion() {
+      gamePaused = true;
+      const q = questions[Math.floor(Math.random() * questions.length)];
+      questionText.textContent = q.q;
+      questionOptions.innerHTML = "";
+      overlay.style.display = "block";
+      questionBox.style.display = "block";
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt;
+        btn.onclick = () => {
+          if (opt === q.answer) {
+            score++;
+            scoreDisplay.textContent = score;
+            overlay.style.display = "none";
+            questionBox.style.display = "none";
+            gamePaused = false;
+          } else {
+            wrongSound.play();
+            wrongEffect.style.display = "block";
+            score = 0;
+            scoreDisplay.textContent = score;
+            fallingNotes = [];
+            setTimeout(() => {
+              wrongEffect.style.display = "none";
+              overlay.style.display = "none";
+              questionBox.style.display = "none";
+              gamePaused = false;
+            }, 500);
+          }
+        };
+        questionOptions.appendChild(btn);
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (!gamePaused && keys.includes(e.key.toUpperCase())) {
+        checkHit(e.key);
+      }
+    });
+
+    setInterval(updateNotes, 30);
+    setInterval(() => {
+      if (!gamePaused) dropNote();
+    }, 1500);
+
+    startButton.addEventListener("click", () => {
+      startScreen.style.display = "none";
+      gamePaused = false;
+    });
+  </script>
+</body>
+</html>
